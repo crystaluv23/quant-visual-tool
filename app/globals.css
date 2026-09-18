@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono-code);
+
+  --color-bg: #08090b;
+  --color-panel: #0d0f13;
+  --color-elevated: #14171d;
+  --color-border: #1c2027;
+  --color-border-strong: #2b313b;
+  --color-text: #e8eaee;
+  --color-dim: #949ba7;
+  --color-faint: #5a616d;
+
+  --color-accent: #a3e635;
+  --color-accent-soft: #3d4d1a;
+  --color-neg: #ff5c7a;
+  --color-hole: #ffb020;
+  --color-info: #56b6ff;
+
+  --radius-panel: 14px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(163, 230, 53, 0.06), transparent 60%),
+    radial-gradient(50rem 40rem at 5% 110%, rgba(86, 182, 255, 0.05), transparent 55%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(163, 230, 53, 0.28);
+  color: #fff;
+}
+
+/* Thin, terminal-style scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+
+@keyframes pulse-hole {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 176, 32, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px rgba(255, 176, 32, 0.35);
+  }
+}
+.hole-glow {
+  animation: pulse-hole 2.4s ease-in-out infinite;
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.dash-flow {
+  animation: dash-flow 1s linear infinite;
+}
+
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-rise {
+  animation: fade-rise 0.4s ease both;
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
