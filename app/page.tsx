@@ -5,24 +5,34 @@ import { FactorLab } from "@/components/factor-lab"
 import { PatternSearch } from "@/components/pattern-search"
 
 type Mode = "lab" | "search"
+type Skin = "v1" | "v2" | "v3"
+
+const SKINS: { id: Skin; label: string }[] = [
+  { id: "v1", label: "终端" },
+  { id: "v2", label: "极光" },
+  { id: "v3", label: "蓝图" },
+]
 
 export default function Page() {
   const [mode, setMode] = useState<Mode>("lab")
+  const [skin, setSkin] = useState<Skin>("v1")
 
   return (
-    <main className="min-h-screen">
-      <div className="grid-lines">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/40 bg-accent/10">
-              <span className="font-mono text-[15px] font-bold text-accent">α</span>
-            </div>
-            <div>
-              <div className="text-[15px] font-semibold tracking-tight text-text">Alphascope</div>
-              <div className="font-mono text-[10px] text-faint">quant research playground</div>
-            </div>
-          </div>
+    <main data-skin={skin} className="relative min-h-screen">
+      <div className="bg-fx" />
 
+      <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/40 bg-accent/10">
+            <span className="font-mono text-[15px] font-bold text-accent">α</span>
+          </div>
+          <div>
+            <div className="text-[15px] font-semibold tracking-tight text-text">Alphascope</div>
+            <div className="font-mono text-[10px] text-faint">quant research playground</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5">
           <div className="flex items-center rounded-xl border border-border bg-panel p-1">
             <ModeButton active={mode === "lab"} onClick={() => setMode("lab")} label="因子实验室" sub="expr → result" />
             <ModeButton
@@ -32,33 +42,33 @@ export default function Page() {
               sub="text → history"
             />
           </div>
-        </header>
 
-        <div className="mx-auto max-w-6xl px-5 pb-6">
-          <div className="mb-5 max-w-2xl">
-            {mode === "lab" ? (
-              <p className="text-[13px] leading-relaxed text-dim">
-                在表达式里写下你的因子。留一个{" "}
-                <span className="font-mono text-hole">hole ?</span> 也没关系 —— 不完整的表达式不会报错，而是给出
-                <span className="text-hole"> 不完整的近似结果</span>，让你实时感受每一次改动对回测与相关性的影响。
-              </p>
-            ) : (
-              <p className="text-[13px] leading-relaxed text-dim">
-                用自然语言描述一段行情走势，系统会理解你的意图，并从历史中检索出
-                <span className="text-accent"> 真实发生过的、形态相似</span>的多段股价走势。
-              </p>
-            )}
+          <div className="flex items-center rounded-xl border border-border bg-panel p-1">
+            {SKINS.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSkin(s.id)}
+                className="rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors"
+                style={{
+                  background: skin === s.id ? "var(--color-elevated)" : "transparent",
+                  boxShadow: skin === s.id ? "inset 0 0 0 1px var(--color-border-strong)" : "none",
+                  color: skin === s.id ? "var(--color-text)" : "var(--color-faint)",
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
           </div>
-
-          {mode === "lab" ? <FactorLab /> : <PatternSearch />}
         </div>
+      </header>
 
-        <footer className="mx-auto max-w-6xl px-5 py-8 text-center">
-          <p className="font-mono text-[10px] text-faint">
-            Alphascope · incomplete equation → incomplete result · 数据为程序化模拟，仅供研究界面演示
-          </p>
-        </footer>
-      </div>
+      <div className="mx-auto max-w-6xl px-5 pb-6 pt-1">{mode === "lab" ? <FactorLab /> : <PatternSearch />}</div>
+
+      <footer className="mx-auto max-w-6xl px-5 py-8 text-center">
+        <p className="font-mono text-[10px] text-faint">
+          Alphascope · incomplete equation → incomplete result · 数据为程序化模拟
+        </p>
+      </footer>
     </main>
   )
 }

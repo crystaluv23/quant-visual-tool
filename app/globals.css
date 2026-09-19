@@ -39,10 +39,7 @@ body {
 }
 
 body {
-  background-image:
-    radial-gradient(60rem 40rem at 85% -10%, rgba(163, 230, 53, 0.06), transparent 60%),
-    radial-gradient(50rem 40rem at 5% 110%, rgba(86, 182, 255, 0.05), transparent 55%);
-  background-attachment: fixed;
+  background-image: none;
 }
 
 ::selection {
@@ -100,9 +97,91 @@ body {
   animation: fade-rise 0.4s ease both;
 }
 
-.grid-lines {
+/* Blinking custom caret (drawn in the highlight layer over a caret-less textarea) */
+@keyframes caret-blink {
+  0%,
+  48% {
+    opacity: 1;
+  }
+  49%,
+  100% {
+    opacity: 0;
+  }
+}
+.caret-blink {
+  animation: caret-blink 1.06s steps(1) infinite;
+}
+
+/* ---- Skin system: decorative background layer swapped per data-skin ---- */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* V1 · Terminal — grid + soft lime/blue glows (default) */
+[data-skin="v1"] .bg-fx {
   background-image:
+    radial-gradient(60rem 40rem at 85% -10%, rgba(163, 230, 53, 0.06), transparent 60%),
+    radial-gradient(50rem 40rem at 5% 110%, rgba(86, 182, 255, 0.05), transparent 55%),
     linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-size:
+    100% 100%,
+    100% 100%,
+    28px 28px,
+    28px 28px;
+}
+
+/* V2 · Aurora — frosted glass panels over a teal/violet aurora */
+[data-skin="v2"] {
+  --color-bg: #070a10;
+  --color-panel: rgba(255, 255, 255, 0.035);
+  --color-elevated: rgba(255, 255, 255, 0.06);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-accent: #5eead4;
+  --color-accent-soft: #134e4a;
+  --radius-panel: 20px;
+}
+[data-skin="v2"] .bg-fx {
+  background-image:
+    radial-gradient(48rem 36rem at 8% 2%, rgba(45, 212, 191, 0.34), transparent 60%),
+    radial-gradient(52rem 38rem at 96% 0%, rgba(139, 92, 246, 0.32), transparent 60%),
+    radial-gradient(60rem 48rem at 55% 112%, rgba(236, 72, 153, 0.2), transparent 62%),
+    radial-gradient(40rem 40rem at 78% 55%, rgba(56, 189, 248, 0.16), transparent 60%);
+  filter: saturate(1.2);
+}
+[data-skin="v2"] .bg-panel {
+  background: rgba(15, 20, 30, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+}
+
+/* V3 · Blueprint — crisp navy engineering grid, electric blue */
+[data-skin="v3"] {
+  --color-bg: #060a12;
+  --color-panel: #0a1017;
+  --color-elevated: #0f1826;
+  --color-border: #152233;
+  --color-border-strong: #274966;
+  --color-accent: #56b6ff;
+  --color-accent-soft: #0e2a4a;
+  --radius-panel: 6px;
+}
+[data-skin="v3"] .bg-fx {
+  background-image:
+    radial-gradient(60rem 40rem at 50% -12%, rgba(86, 182, 255, 0.08), transparent 60%),
+    linear-gradient(to right, rgba(86, 182, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(86, 182, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to right, rgba(86, 182, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(86, 182, 255, 0.02) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    96px 96px,
+    96px 96px,
+    24px 24px,
+    24px 24px;
 }

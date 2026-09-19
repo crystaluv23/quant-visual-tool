@@ -124,8 +124,7 @@ export function PatternSearch() {
 
       {!result && !loading && (
         <div className="flex flex-col items-center justify-center gap-2 rounded-panel border border-dashed border-border bg-panel/50 py-20 text-center">
-          <div className="font-mono text-[13px] text-dim">输入一句话，检索历史上真实发生过的相似走势</div>
-          <div className="text-[12px] text-faint">系统会识别你描述的形态，并按相似度返回多段历史行情</div>
+          <div className="font-mono text-[13px] text-dim">用一句话描述走势，检索历史上真实的相似行情</div>
         </div>
       )}
     </div>

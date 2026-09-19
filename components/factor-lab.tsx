@@ -55,7 +55,7 @@ export function FactorLab() {
                   <span className="text-[13px] text-text">{ex.label}</span>
                   <span className="font-mono text-[10px] text-faint group-hover:text-dim">载入 →</span>
                 </div>
-                <code className="mt-1 font-mono text-[11px] text-info/80">{ex.expr}</code>
+                <code className="mt-1 font-mono text-[11px] text-info/80">{ex.expr.replace(/\?/g, "□")}</code>
                 <span className="mt-0.5 text-[11px] text-faint">{ex.note}</span>
               </button>
             ))}

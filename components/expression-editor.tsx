@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { Fragment, useEffect, useMemo, useRef, useState } from "react"
 import { VARIABLES, FUNCTIONS } from "@/lib/factor-engine"
 
 type Props = {
@@ -11,7 +11,8 @@ type Props = {
 const FN_NAMES = new Set(Object.keys(FUNCTIONS))
 const VAR_NAMES = new Set<string>(VARIABLES as unknown as string[])
 
-type Piece = { text: string; kind: "fn" | "var" | "num" | "hole" | "op" | "plain" }
+type Kind = "fn" | "var" | "num" | "hole" | "op" | "plain"
+type Piece = { text: string; kind: Kind }
 
 // Lightweight syntax highlighter shown behind a transparent textarea.
 function highlight(src: string): Piece[] {
@@ -35,7 +36,7 @@ function highlight(src: string): Piece[] {
   return pieces
 }
 
-const colorFor: Record<Piece["kind"], string> = {
+const colorFor: Record<Kind, string> = {
   fn: "var(--color-info)",
   var: "var(--color-accent)",
   num: "#d6b3ff",
@@ -45,11 +46,97 @@ const colorFor: Record<Piece["kind"], string> = {
 }
 
 export function ExpressionEditor({ value, onChange }: Props) {
-  const pieces = useMemo(() => highlight(value), [value])
+  const taRef = useRef<HTMLTextAreaElement>(null)
+  const pendingCaret = useRef<number | null>(null)
+  const [caret, setCaret] = useState(0)
+  const [focused, setFocused] = useState(false)
+
+  // Expand tokens into per-character cells so the caret can be injected anywhere.
+  const cells = useMemo(() => {
+    const arr: { ch: string; kind: Kind }[] = []
+    for (const p of highlight(value)) for (const ch of p.text) arr.push({ ch, kind: p.kind })
+    return arr
+  }, [value])
+
+  function syncCaret(el: HTMLTextAreaElement) {
+    setCaret(el.selectionStart)
+  }
+
+  // Apply a programmatic caret position after value updates (e.g. hole insertion).
+  useEffect(() => {
+    if (pendingCaret.current != null && taRef.current) {
+      const pos = pendingCaret.current
+      taRef.current.focus()
+      taRef.current.setSelectionRange(pos, pos)
+      setCaret(pos)
+      pendingCaret.current = null
+    }
+  }, [value])
 
   function insertHole() {
-    onChange(value ? `${value.trimEnd()} ? ` : "? ")
+    const el = taRef.current
+    const pos = el ? el.selectionStart : value.length
+    const before = value.slice(0, pos)
+    const after = value.slice(pos)
+    const needsSpaceBefore = before.length > 0 && !/\s$/.test(before)
+    const needsSpaceAfter = after.length > 0 && !/^\s/.test(after)
+    const insert = `${needsSpaceBefore ? " " : ""}?${needsSpaceAfter ? " " : ""}`
+    const holeIndex = pos + (needsSpaceBefore ? 1 : 0)
+    pendingCaret.current = holeIndex // land the caret on the LEFT of the new hole → shows <□
+    onChange(before + insert + after)
   }
+
+  // The caret element: bracket "<" or ">" when it sits beside a hole, else a thin bar.
+  function Caret() {
+    const nextHole = cells[caret]?.kind === "hole"
+    const prevHole = cells[caret - 1]?.kind === "hole"
+    if (nextHole || prevHole) {
+      return (
+        <span
+          className="caret-blink"
+          style={{
+            color: "var(--color-hole)",
+            fontWeight: 700,
+            textShadow: "0 0 10px var(--color-hole)",
+          }}
+        >
+          {nextHole ? "<" : ">"}
+        </span>
+      )
+    }
+    return (
+      <span
+        className="caret-blink"
+        style={{
+          display: "inline-block",
+          width: 0,
+          height: "1.05em",
+          verticalAlign: "-0.16em",
+          borderLeft: "1.5px solid var(--color-accent)",
+          marginInline: "-0.75px",
+        }}
+      />
+    )
+  }
+
+  const nodes: React.ReactNode[] = []
+  cells.forEach((c, i) => {
+    if (focused && caret === i) nodes.push(<Caret key="caret" />)
+    nodes.push(
+      <span
+        key={`c${i}`}
+        className={c.kind === "hole" ? "rounded-[3px] px-0.5" : undefined}
+        style={{
+          color: colorFor[c.kind],
+          background: c.kind === "hole" ? "rgba(255,176,32,0.16)" : undefined,
+          fontWeight: c.kind === "fn" || c.kind === "hole" ? 600 : 400,
+        }}
+      >
+        {c.kind === "hole" ? "□" : c.ch}
+      </span>,
+    )
+  })
+  if (focused && caret >= cells.length) nodes.push(<Caret key="caret" />)
 
   return (
     <div className="relative">
@@ -59,39 +146,41 @@ export function ExpressionEditor({ value, onChange }: Props) {
           onClick={insertHole}
           className="rounded-md border border-hole/40 bg-hole/10 px-2 py-1 font-mono text-[11px] text-hole transition-colors hover:bg-hole/20"
         >
-          + 插入 hole ?
+          + hole □
         </button>
       </div>
       <div className="relative rounded-lg border border-border-strong bg-bg">
-        {/* highlight layer */}
+        {/* highlight + caret layer */}
         <pre
           aria-hidden
           className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words p-4 font-mono text-[15px] leading-6"
         >
-          {pieces.map((p, i) => (
-            <span
-              key={i}
-              className={p.kind === "hole" ? "rounded-[3px] px-0.5" : undefined}
-              style={{
-                color: colorFor[p.kind],
-                background: p.kind === "hole" ? "rgba(255,176,32,0.14)" : undefined,
-                fontWeight: p.kind === "fn" || p.kind === "hole" ? 600 : 400,
-              }}
-            >
-              {p.text}
-            </span>
+          {nodes.map((n, i) => (
+            <Fragment key={i}>{n}</Fragment>
           ))}
           {"\n"}
         </pre>
-        {/* input layer */}
+        {/* input layer (transparent text + hidden native caret) */}
         <textarea
+          ref={taRef}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value)
+            syncCaret(e.currentTarget)
+          }}
+          onSelect={(e) => syncCaret(e.currentTarget)}
+          onClick={(e) => syncCaret(e.currentTarget)}
+          onKeyUp={(e) => syncCaret(e.currentTarget)}
+          onFocus={(e) => {
+            setFocused(true)
+            syncCaret(e.currentTarget)
+          }}
+          onBlur={() => setFocused(false)}
           spellCheck={false}
           rows={3}
           placeholder="close / delay(close, 20) - 1"
-          className="relative block w-full resize-none bg-transparent p-4 font-mono text-[15px] leading-6 text-transparent caret-white outline-none placeholder:text-faint"
-          style={{ WebkitTextFillColor: "transparent" }}
+          className="relative block w-full resize-none bg-transparent p-4 font-mono text-[15px] leading-6 caret-transparent outline-none placeholder:text-faint"
+          style={{ WebkitTextFillColor: "transparent", color: "transparent" }}
         />
       </div>
     </div>
